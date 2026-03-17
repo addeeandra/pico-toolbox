@@ -1,4 +1,4 @@
-# 🦐 picoclaw-toolbox
+# 🦐 Picoclaw Toolbox
 
 > **PicoClaw** on **Ubuntu 24.04** — pre-loaded with everything a multi-modal AI agent needs.
 
