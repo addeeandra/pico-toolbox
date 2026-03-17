@@ -99,36 +99,36 @@ RUN install -d -m 755 /etc/apt/keyrings \
 # ── Python AI/ML packages ─────────────────────────────────────
 RUN pip3 install --no-cache-dir --break-system-packages \
     # LLM SDKs
-    'anthropic>=0.40' \
-    'openai>=1.0' \
-    'google-generativeai>=0.8' \
+    'anthropic==0.85.0' \
+    'openai==2.29.0' \
+    'google-generativeai==0.8.6' \
     # Agent frameworks
-    'langchain>=0.3' \
-    'langchain-community>=0.3' \
-    'langchain-anthropic>=0.3' \
-    'langchain-openai>=0.3' \
+    'langchain==1.2.12' \
+    'langchain-community==0.4.1' \
+    'langchain-anthropic==1.3.5' \
+    'langchain-openai==1.1.11' \
     # Multi-modal
-    'Pillow>=10.0' \
-    'opencv-python-headless>=4.9' \
+    'Pillow==12.1.1' \
+    'opencv-python-headless==4.13.0.92' \
     # Document processing
-    'pypdf>=4.0' \
-    'python-docx>=1.0' \
-    'openpyxl>=3.1' \
-    'markdown>=3.5' \
-    'beautifulsoup4>=4.12' \
-    'lxml>=4.9' \
+    'pypdf==6.9.1' \
+    'python-docx==1.2.0' \
+    'openpyxl==3.1.5' \
+    'markdown==3.10.2' \
+    'beautifulsoup4==4.14.3' \
+    'lxml==6.0.2' \
     # Data & utilities
-    'requests>=2.31' \
-    'httpx>=0.27' \
-    'aiohttp>=3.9' \
-    'pydantic>=2.0' \
-    'rich>=13.0' \
-    'typer>=0.12' \
-    'python-dotenv>=1.0' \
+    'requests==2.32.5' \
+    'httpx==0.28.1' \
+    'aiohttp==3.13.3' \
+    'pydantic==2.12.5' \
+    'rich==14.3.3' \
+    'typer==0.24.1' \
+    'python-dotenv==1.2.2' \
     # Web scraping
-    'playwright>=1.40' \
+    'playwright==1.58.0' \
     # MCP SDK
-    'mcp>=1.0'
+    'mcp==1.26.0'
 
 # ── Optional heavy packages (--build-arg INSTALL_HEAVY_PACKAGES=true to enable) ──
 ARG INSTALL_HEAVY_PACKAGES=false
@@ -144,14 +144,14 @@ RUN python3 -m playwright install chromium --with-deps || true
 
 # ── Node.js AI packages ───────────────────────────────────────
 RUN npm install -g \
-    @anthropic-ai/sdk@^0 \
-    openai@^4 \
-    @modelcontextprotocol/sdk@^1 \
-    @modelcontextprotocol/server-filesystem@^2 \
-    @modelcontextprotocol/server-github@^2 \
-    @modelcontextprotocol/server-brave-search@^0 \
-    ts-node@^10 \
-    typescript@^5
+    @anthropic-ai/sdk@0.79.0 \
+    openai@4.104.0 \
+    @modelcontextprotocol/sdk@1.27.1 \
+    @modelcontextprotocol/server-filesystem@2026.1.14 \
+    @modelcontextprotocol/server-github@2025.4.8 \
+    @modelcontextprotocol/server-brave-search@0.6.2 \
+    ts-node@10.9.2 \
+    typescript@5.9.3
 
 # ── Download & install picoclaw binary ───────────────────────
 RUN set -eux; \
