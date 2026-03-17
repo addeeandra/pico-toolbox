@@ -12,7 +12,7 @@ x-picoclaw-base: &picoclaw-base
   build:
     context: .
     dockerfile: Dockerfile
-  image: ghcr.io/${GITHUB_REPOSITORY:-addeeandra/ai-toolbox}:latest
+  image: ghcr.io/${GITHUB_REPOSITORY:-addeeandra/pico-toolbox}:latest
   volumes:
     - picoclaw-workspace:/root/.picoclaw/workspace
     - ./config:/root/.picoclaw/config
