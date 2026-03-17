@@ -80,12 +80,13 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # ── Node.js LTS via NodeSource ────────────────────────────────
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # ── GitHub CLI (gh) ───────────────────────────────────────────
-RUN mkdir -p -m 755 /etc/apt/keyrings \
+RUN install -d -m 755 /etc/apt/keyrings \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
@@ -100,42 +101,42 @@ RUN pip3 install --no-cache-dir --break-system-packages \
     # LLM SDKs
     'anthropic>=0.40' \
     'openai>=1.0' \
-    google-generativeai \
+    'google-generativeai>=0.8' \
     # Agent frameworks
     'langchain>=0.3' \
     'langchain-community>=0.3' \
     'langchain-anthropic>=0.3' \
     'langchain-openai>=0.3' \
     # Multi-modal
-    Pillow \
-    opencv-python-headless \
+    'Pillow>=10.0' \
+    'opencv-python-headless>=4.9' \
     # Document processing
-    pypdf \
-    python-docx \
-    openpyxl \
-    markdown \
-    beautifulsoup4 \
-    lxml \
+    'pypdf>=4.0' \
+    'python-docx>=1.0' \
+    'openpyxl>=3.1' \
+    'markdown>=3.5' \
+    'beautifulsoup4>=4.12' \
+    'lxml>=4.9' \
     # Data & utilities
-    requests \
-    httpx \
-    aiohttp \
+    'requests>=2.31' \
+    'httpx>=0.27' \
+    'aiohttp>=3.9' \
     'pydantic>=2.0' \
-    rich \
-    typer \
-    python-dotenv \
+    'rich>=13.0' \
+    'typer>=0.12' \
+    'python-dotenv>=1.0' \
     # Web scraping
-    playwright \
+    'playwright>=1.40' \
     # MCP SDK
-    mcp
+    'mcp>=1.0'
 
 # ── Optional heavy packages (--build-arg INSTALL_HEAVY_PACKAGES=true to enable) ──
 ARG INSTALL_HEAVY_PACKAGES=false
 RUN if [ "$INSTALL_HEAVY_PACKAGES" = "true" ]; then \
     pip3 install --no-cache-dir --break-system-packages \
-    openai-whisper \
-    chromadb \
-    sentence-transformers; \
+    'openai-whisper>=20231117' \
+    'chromadb>=0.4' \
+    'sentence-transformers>=2.7'; \
     fi
 
 # ── Playwright browsers (for web agent capabilities) ──────────
@@ -145,12 +146,12 @@ RUN python3 -m playwright install chromium --with-deps || true
 RUN npm install -g \
     @anthropic-ai/sdk@^0 \
     openai@^4 \
-    @modelcontextprotocol/sdk \
-    @modelcontextprotocol/server-filesystem \
-    @modelcontextprotocol/server-github \
-    @modelcontextprotocol/server-brave-search \
-    ts-node \
-    typescript
+    @modelcontextprotocol/sdk@^1 \
+    @modelcontextprotocol/server-filesystem@^2 \
+    @modelcontextprotocol/server-github@^2 \
+    @modelcontextprotocol/server-brave-search@^0 \
+    ts-node@^10 \
+    typescript@^5
 
 # ── Download & install picoclaw binary ───────────────────────
 RUN set -eux; \

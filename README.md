@@ -52,34 +52,14 @@ docker compose run --rm picoclaw-shell
 
 ---
 
-## GitHub Actions — GHCR publish
-
-The workflow in `.github/workflows/build-push.yml`:
-
-- Builds multi-arch images (`amd64`, `arm64`) via QEMU + Buildx
-- Pushes to `ghcr.io/addeeandra/ai-toolbox` with version tags and `:latest`
-- Runs a smoke test to verify the binary and key packages are present
-- Caches layers via GitHub Actions cache for fast rebuilds
-- Attaches SBOM and provenance attestations
-
-No extra secrets are needed — it uses the built-in `GITHUB_TOKEN`.
-
----
-
 ## Environment variables
 
-| Variable                | Default                              | Description            |
-| ----------------------- | ------------------------------------ | ---------------------- |
-| `ANTHROPIC_API_KEY`     | —                                    | Anthropic provider key |
-| `OPENAI_API_KEY`        | —                                    | OpenAI provider key    |
-| `OPENROUTER_API_KEY`    | —                                    | OpenRouter key         |
-| `GROQ_API_KEY`          | —                                    | Groq key               |
-| `BRAVE_SEARCH_API_KEY`  | —                                    | Brave Search API key   |
-| `TELEGRAM_BOT_TOKEN`    | —                                    | Telegram channel token |
-| `DISCORD_BOT_TOKEN`     | —                                    | Discord channel token  |
-| `PICOCLAW_CONFIG`       | `/root/.picoclaw/config/config.json` | Config file path       |
-| `PICOCLAW_DATA`         | `/root/.picoclaw`                    | Data root              |
-| `PICOCLAW_GATEWAY_HOST` | `0.0.0.0`                            | Gateway bind address   |
+| Variable                | Default                              | Description          |
+| ----------------------- | ------------------------------------ | -------------------- |
+| `PICOCLAW_CONFIG`       | `/root/.picoclaw/config/config.json` | Config file path     |
+| `PICOCLAW_DATA`         | `/root/.picoclaw`                    | Data root            |
+| `PICOCLAW_GATEWAY_HOST` | `0.0.0.0`                            | Gateway bind address |
+| `PICOCLAW_GATEWAY_PORT` | `8080`                               | Gateway bind port    |
 
 ---
 
