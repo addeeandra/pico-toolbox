@@ -44,6 +44,8 @@ services:
     restart: "no"
     stdin_open: true
     tty: true
+    profiles:
+      - agent
 
   # ── Shell: bare shell for debugging & manual tool use ────────
   picoclaw-shell:
@@ -53,6 +55,8 @@ services:
     restart: "no"
     stdin_open: true
     tty: true
+    profiles:
+      - shell
 
 volumes:
   picoclaw-workspace:

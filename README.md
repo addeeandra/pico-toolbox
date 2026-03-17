@@ -3,7 +3,7 @@
 > **PicoClaw** on **Ubuntu 24.04** — pre-loaded with everything a multi-modal AI agent needs.
 
 [![Build & Push](https://github.com/addeeandra/pico-toolbox/actions/workflows/build-push.yml/badge.svg)](https://github.com/addeeandra/pico-toolbox/actions/workflows/build-push.yml)
-[![GHCR](https://img.shields.io/badge/ghcr.io-addeeandra%2Fai--toolbox-blue)](https://ghcr.io/addeeandra/pico-toolbox)
+[![GHCR](https://img.shields.io/badge/ghcr.io-addeeandra%2Fpico--toolbox-blue)](https://ghcr.io/addeeandra/pico-toolbox)
 
 ---
 
