@@ -1,0 +1,59 @@
+name: picoclaw-toolbox
+
+# ─────────────────────────────────────────────────────────────
+# Usage:
+#   Gateway (persistent bot):  docker compose up -d picoclaw-gateway
+#   One-shot agent query:       docker compose run --rm picoclaw-agent -m "Hello"
+#   Interactive agent REPL:     docker compose run --rm picoclaw-agent
+#   Shell inside toolbox:       docker compose run --rm picoclaw-shell
+# ─────────────────────────────────────────────────────────────
+
+x-picoclaw-base: &picoclaw-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: ghcr.io/${GITHUB_REPOSITORY:-addeeandra/ai-toolbox}:latest
+  volumes:
+    - picoclaw-workspace:/root/.picoclaw/workspace
+    - ./config:/root/.picoclaw/config
+  env_file:
+    - .env
+  restart: unless-stopped
+
+services:
+
+  # ── Gateway: long-running multi-channel bot ──────────────────
+  picoclaw-gateway:
+    <<: *picoclaw-base
+    container_name: picoclaw-gateway
+    command: gateway
+    ports:
+      - "${PICOCLAW_GATEWAY_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # ── Agent: ephemeral one-shot / interactive mode ─────────────
+  picoclaw-agent:
+    <<: *picoclaw-base
+    container_name: picoclaw-agent
+    command: agent
+    restart: "no"
+    stdin_open: true
+    tty: true
+
+  # ── Shell: bare shell for debugging & manual tool use ────────
+  picoclaw-shell:
+    <<: *picoclaw-base
+    container_name: picoclaw-shell
+    entrypoint: /bin/bash
+    restart: "no"
+    stdin_open: true
+    tty: true
+
+volumes:
+  picoclaw-workspace:
+    driver: local

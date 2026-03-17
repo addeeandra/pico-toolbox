@@ -1,0 +1,181 @@
+name: Build & Push picoclaw-toolbox
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      picoclaw_version:
+        description: "PicoClaw release tag (e.g. v0.2.0) or 'latest'"
+        required: false
+        default: "latest"
+
+# ── Permissions ───────────────────────────────────────────────
+permissions:
+  contents: read
+  packages: write
+  id-token: write # needed for OIDC attestations (optional)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── Lint the Dockerfile ──────────────────────────────────────
+  lint:
+    name: Hadolint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          ignore: DL3008,DL3009,DL3015 # apt pin / recommends warnings acceptable here
+
+  # ── Build & push multi-arch image ────────────────────────────
+  build-push:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    needs: lint
+    # Only push on main branch pushes or version tags; PRs only build
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Set up QEMU for cross-platform builds ────────────────
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      # ── Set up Docker Buildx ─────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: image=moby/buildkit:latest
+
+      # ── Log in to GHCR (skip on PRs) ─────────────────────────
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Resolve picoclaw version ─────────────────────────────
+      - name: Resolve picoclaw version
+        id: picoclaw-version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.picoclaw_version }}"
+          else
+            VERSION="latest"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # ── Generate Docker image metadata / tags ────────────────
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Branch pushes → :main
+            type=ref,event=branch
+            # PRs → :pr-<number>
+            type=ref,event=pr
+            # Version tags → :v1.2.3, :1.2, :1, :latest
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            # Always tag :latest on main branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # SHA tag for traceability
+            type=sha,prefix=sha-,format=short
+          labels: |
+            org.opencontainers.image.title=picoclaw-toolbox
+            org.opencontainers.image.description=PicoClaw + multi-modal AI agent toolbox on Ubuntu 24.04
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+
+      # ── Build (and optionally push) ──────────────────────────
+      - name: Build & push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PICOCLAW_VERSION=${{ steps.picoclaw-version.outputs.version }}
+            GITHUB_REPOSITORY=${{ github.repository }}
+          # Layer cache via GitHub Actions cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      # ── Print image digest ───────────────────────────────────
+      - name: Print digest
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "Image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "Digest:       ${{ steps.build.outputs.digest }}"
+
+  # ── Smoke-test the built image on amd64 ──────────────────────
+  # Note: smoke tests are intentionally skipped on PRs — images are not pushed to
+  # GHCR for pull request builds, so there is no image to pull and test against.
+  smoke-test:
+    name: Smoke test
+    runs-on: ubuntu-latest
+    needs: build-push
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest image
+        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Check picoclaw binary
+        run: |
+          docker run --rm \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            version
+
+      - name: Check Python packages present
+        run: |
+          docker run --rm \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            python3 -c "import anthropic, openai, PIL, langchain; print('Python packages OK')"
+
+      - name: Check Node packages present
+        run: |
+          docker run --rm \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            node -e "require('@anthropic-ai/sdk'); console.log('Node packages OK')"
+
+      - name: Check media tools present
+        run: |
+          docker run --rm \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            bash -c "ffmpeg -version | head -1 && tesseract --version | head -1 && echo 'Media tools OK'"
